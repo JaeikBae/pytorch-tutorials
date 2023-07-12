@@ -1,2 +1,9 @@
 docker build -t pytorch .
-nvidia-docker run -v .:/workspace --name=pytorch-test --rm -it pytorch /bin/bash
+xhost +
+nvidia-docker run \
+    -e DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -v .:/workspace \
+    --rm -it \
+    pytorch \
+    /bin/bash
