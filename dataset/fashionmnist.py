@@ -18,7 +18,7 @@ test_data = datasets.FashionMNIST(
     transform=ToTensor()
 )
 
-lables_map = {
+labels_map = {
     0: "T-Shirt",
     1: "Trouser",
     2: "Pullover",
@@ -30,13 +30,28 @@ lables_map = {
     8: "Bag",
     9: "Ankle Boot"
 }
-figure = plt.figure(figsize=(8, 8))
-cols, rows = 3, 3
-for i in range(1, cols * rows + 1):
-    sample_idx = torch.randint(len(training_data), size=(1,)).item()
-    img, lable = training_data[sample_idx]
-    figure.add_subplot(rows, cols, i)
-    plt.title(lables_map[lable])
-    plt.axis("off")
-    plt.imshow(img.squeeze(), cmap="gray")
+# figure = plt.figure(figsize=(8, 8))
+# cols, rows = 3, 3
+# for i in range(1, cols * rows + 1):
+#     sample_idx = torch.randint(len(training_data), size=(1,)).item()
+#     img, lable = training_data[sample_idx]
+#     figure.add_subplot(rows, cols, i)
+#     plt.title(lables_map[lable])
+#     plt.axis("off")
+#     plt.imshow(img.squeeze(), cmap="gray")
+# plt.show()
+
+
+from torch.utils.data import DataLoader
+
+train_dataloader = DataLoader(training_data, batch_size=64, shuffle=True)
+test_dataloader = DataLoader(test_data, batch_size=64, shuffle=True)
+
+train_features, train_labels = next(iter(train_dataloader))
+print(f"Feature batch shape: {train_features.size()}")
+print(f"Lables batch shape: {train_labels.size()}")
+img = train_features[1].squeeze()
+label = train_labels[1]
+plt.imshow(img, cmap="gray")
+print(f"Lable: {labels_map[label.item()]}")
 plt.show()
