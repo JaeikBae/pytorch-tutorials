@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 import matplotlib.pyplot as plt
+import numpy as np
 
 training_data = datasets.FashionMNIST(
     root="dataset",
@@ -48,10 +49,8 @@ train_dataloader = DataLoader(training_data, batch_size=64, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=64, shuffle=True)
 
 train_features, train_labels = next(iter(train_dataloader))
-print(f"Feature batch shape: {train_features.size()}")
-print(f"Lables batch shape: {train_labels.size()}")
-img = train_features[1].squeeze()
-label = train_labels[1]
+img = train_features[0].squeeze()
+label = train_labels[0]
 plt.imshow(img, cmap="gray")
-print(f"Lable: {labels_map[label.item()]}")
+print(f"Label: {labels_map[label.item()]}")
 plt.show()
