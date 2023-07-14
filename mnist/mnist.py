@@ -35,10 +35,9 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
                                             shuffle=True)
 
 testset = torchvision.datasets.MNIST(root='./data', train=False,
-                                        download=True, transform=transform)
+                                        download=True, transform=transforms.ToTensor())
 testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
-                                            shuffle=True)
-
+                                                shuffle=True)
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def train(model, trainloader, optimizer, criterion):
@@ -57,7 +56,7 @@ def train(model, trainloader, optimizer, criterion):
 
 
 
-def eval():
+def eval(model, testloader):
     correct = 0
     total = 0
     with torch.no_grad():
@@ -75,5 +74,5 @@ if __name__ == '__main__':
     criterion = torch.nn.CrossEntropyLoss()
     print(summary(model, (1, 28, 28)))
     train(model, trainloader, optimizer, criterion)
-    eval()
-    
+    eval(model, testloader)
+    torch.save(model.state_dict(), 'mnist.pth')
