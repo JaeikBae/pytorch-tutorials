@@ -7,26 +7,33 @@ from torchsummary import summary
 class Net(torch.nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
-        self.pool = torch.nn.MaxPool2d(2, 2)
-        self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = torch.nn.Linear(4*4*50, 120)
-        self.fc2 = torch.nn.Linear(120, 84)
-        self.fc3 = torch.nn.Linear(84, 10)
+        self.features = torch.nn.Sequential(
+            torch.nn.Conv2d(1, 6, 5, 1),
+            torch.nn.Tanh(),  
+            torch.nn.AvgPool2d(2),
+            torch.nn.Conv2d(6, 16, 5, 1),
+            torch.nn.Tanh(),
+            torch.nn.AvgPool2d(2),
+            torch.nn.Conv2d(16, 120, 5, 1),
+            torch.nn.Tanh()
+        )
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Linear(120, 84),
+            torch.nn.Tanh(),
+            torch.nn.Linear(84, 10)
+        )
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
+        x = self.features(x)
         x = torch.flatten(x, 1)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.classifier(x)
         return x
 
 BATCH_SIZE = 4
 
 transform = transforms.Compose(
-    [transforms.ToTensor()]
+    [transforms.Resize((32, 32)),
+        transforms.ToTensor()]
 )
 
 trainset = torchvision.datasets.MNIST(root='./data', train=True,
@@ -35,7 +42,7 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
                                             shuffle=True)
 
 testset = torchvision.datasets.MNIST(root='./data', train=False,
-                                        download=True, transform=transforms.ToTensor())
+                                        download=True, transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
                                                 shuffle=True)
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -72,7 +79,7 @@ if __name__ == '__main__':
     model = Net().to(DEVICE)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     criterion = torch.nn.CrossEntropyLoss()
-    print(summary(model, (1, 28, 28)))
+    print(summary(model, (1, 32, 32)))
     train(model, trainloader, optimizer, criterion)
     eval(model, testloader)
     torch.save(model.state_dict(), 'mnist.pth')
