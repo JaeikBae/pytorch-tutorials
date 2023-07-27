@@ -12,20 +12,20 @@ class Net(torch.nn.Module):
         #conv net for flower 102
         self.net = torch.nn.Sequential(
             torch.nn.Conv2d(3, 64, 3, 1),
+            torch.nn.BatchNorm2d(64),
             torch.nn.ReLU(),
+            torch.nn.Dropout(0.3),
             torch.nn.Conv2d(64, 64, 3, 1),
-            torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),
-            torch.nn.Conv2d(64, 128, 3, 1),
-            torch.nn.ReLU(),
-            torch.nn.Conv2d(128, 128, 3, 1),
+            torch.nn.BatchNorm2d(64),
             torch.nn.ReLU()
         )
         self.linear = torch.nn.Sequential(
-            torch.nn.Linear(12800, 1024),
+            torch.nn.Linear(64*28*28, 1024),
             torch.nn.ReLU(),
+            torch.nn.Dropout(0.3),
             torch.nn.Linear(1024, 1024),
             torch.nn.ReLU(),
+            torch.nn.Dropout(0.3),
             torch.nn.Linear(1024, 102)
         )
 
@@ -37,7 +37,7 @@ class Net(torch.nn.Module):
         return x
     
 BATCH_SIZE = 10
-epochs = 3
+epochs = 5
 
 transform = transforms.Compose(
     [transforms.Resize((32, 32)),
@@ -47,15 +47,15 @@ transform = transforms.Compose(
 trainset = torchvision.datasets.Flowers102(root='./data', split='train',
                                         download=True, transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
-                                            shuffle=True)
+                                            shuffle=True, drop_last=True)
 testset = torchvision.datasets.Flowers102(root='./data', split='test',
                                         download=True, transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
-                                            shuffle=True)
+                                            shuffle=True, drop_last=True)
 valset = torchvision.datasets.Flowers102(root='./data', split='val',
                                         download=True, transform=transform)
 valloader = torch.utils.data.DataLoader(valset, batch_size=BATCH_SIZE,
-                                            shuffle=True)
+                                            shuffle=True, drop_last=True)
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 train_log = []
@@ -93,15 +93,21 @@ def test(model, loader):
 
 if __name__ == "__main__":
     model = Net().to(DEVICE)
-    summary(model, (3, 32, 32))
+    if os.path.exists('./flower.pth'):
+        model.load_state_dict(torch.load('./flower.pth'))
+    # summary(model, (3, 32, 32))
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.9)    
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)    
     train(model, testloader, optimizer, criterion)
-    test(model, trainloader)
-    test(model, valloader)
-    plt.plot(train_log)
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.ylim(0, 10)
-    plt.show()
-    torch.save(model.state_dict(), './flowers.pth')
+    # print('Test')
+    # test(model, testloader)
+    # print('Train')
+    # test(model, trainloader)
+    # print('Validation')
+    # test(model, valloader)
+    # plt.plot(train_log)
+    # plt.xlabel('Epochs')
+    # plt.ylabel('Loss')
+    # plt.ylim(0, 10)
+    # plt.show()
+    torch.save(model.state_dict(), './flower.pth')
